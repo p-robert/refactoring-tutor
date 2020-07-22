@@ -19,16 +19,14 @@ public class InvoiceService {
         final NumberFormat format = NumberFormat.getCurrencyInstance();
 
         for (val performance: invoice.getPerformances()) {
-            int thisAmount = amountFor(performance, playFor(performance));
-
             volumeCredits += Math.max(performance.getAudience() - 30, 0);
             if (PlayType.COMEDY == playFor(performance).getType())
                 volumeCredits += Math.floor(performance.getAudience() / 5);
             result.append("    ").append(playFor(performance).getName())
-                    .append(": ").append(format.format(thisAmount/100))
+                    .append(": ").append(format.format(amountFor(performance)/100))
                     .append(" (").append(performance.getAudience()).append(" seats").append(")")
                     .append("\n");
-            totalAmount += thisAmount;
+            totalAmount += amountFor(performance);
         }
 
         result.append("Amount owed is ").append(format.format(totalAmount/100)).append("\n");
@@ -44,9 +42,9 @@ public class InvoiceService {
         return DataLoader.readPlays().stream().filter(p -> Objects.equals(aPerformance.getPlayID(), p.getId())).findFirst().orElseThrow(RuntimeException::new);
     }
 
-    private static int amountFor(Performance aPerformance, Play play) {
+    private static int amountFor(Performance aPerformance) {
         int result;
-        switch (play.getType()) {
+        switch (playFor(aPerformance).getType()) {
             case TRAGEDY:
                 result = 40000;
                 if (aPerformance.getAudience() > 30) {
@@ -61,7 +59,7 @@ public class InvoiceService {
                 result += 300 * aPerformance.getAudience();
                 break;
             default:
-                throw new Error("unknown type " + play.getType());
+                throw new Error("unknown type " + playFor(aPerformance).getType());
         }
         return result;
     }
